@@ -5,8 +5,9 @@ from preprocess import preprocess_csv
 from tokenizer import encoding
 import torch
 import matplotlib.pyplot as plt
+import time
 
-device = 'cuda'
+device = 'cpu'
 embed_size = 50
 block_size = 128
 num_layers = 4
@@ -94,6 +95,7 @@ def compute_loss(outputs, labels, bias_predictions=None, bias_labels=None):
 
 
 def train_baseline(train_loader, val_loader, model, optimizer, num_epochs):
+    start_time = time.time()
     for epoch in range(num_epochs):
             model.train()
             total_loss = 0
@@ -115,13 +117,16 @@ def train_baseline(train_loader, val_loader, model, optimizer, num_epochs):
             test_accuracy, incorrect_predictions = compute_baseline_accuracy(model, val_loader)
             print(f"training accuracy: {train_accuracy}")
             print(f"Val accuracy: {test_accuracy}")
+    end_time = time.time()
+    print(f'Total Time taken for basline: {start_time - end_time}')
 
 
 
 def train_model(model, train_loader, val_loader, optimizer, num_epochs):
     train_accuracies = []
     val_accuracies = []
-    test_accuracies = []
+    
+    start_time = time.time()
 
     for epoch in range(num_epochs):
             model.train()
@@ -151,6 +156,8 @@ def train_model(model, train_loader, val_loader, optimizer, num_epochs):
 
             print(f"training accuracy: {train_accuracy}")
             print(f"Val accuracy: {val_accuracy}")
+    end_time = time.time()
+    print(f'Total Time taken for training: {start_time - end_time}')
     return incorrect_predictions
 
 
