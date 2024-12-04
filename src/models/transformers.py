@@ -78,7 +78,7 @@ class MultiHeadAttention(nn.Module):
             for _ in range(n_heads)
         ])
         self.proj = nn.Linear(head_size * n_heads, embed_size)
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, x):
         out = []
@@ -131,7 +131,7 @@ class EncoderModel(nn.Module):
         self.position_embedding = nn.Embedding(block_size, embed_size)
         self.blocks = nn.ModuleList([Block(embed_size, n_heads) for _ in range(n_layers)])
         self.ln_f = nn.LayerNorm(embed_size)
-        self.dropout = nn.Dropout(0)
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, input_ids, bias_tokens):
         B, T = input_ids.shape

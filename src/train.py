@@ -6,7 +6,7 @@ from tokenizer import encoding
 import torch
 import matplotlib.pyplot as plt
 
-device = 'cpu'
+device = 'cuda'
 embed_size = 50
 block_size = 128
 num_layers = 4
@@ -118,7 +118,7 @@ def train_baseline(train_loader, val_loader, model, optimizer, num_epochs):
 
 
 
-def train_model(model, train_loader, val_loader, test_loader, optimizer, num_epochs):
+def train_model(model, train_loader, val_loader, optimizer, num_epochs):
     train_accuracies = []
     val_accuracies = []
     test_accuracies = []
@@ -144,16 +144,13 @@ def train_model(model, train_loader, val_loader, test_loader, optimizer, num_epo
 
             train_accuracy, incorrect_predictions = compute_classifier_accuracy(model, train_loader)
             val_accuracy, incorrect_predictions = compute_classifier_accuracy(model, val_loader)
-            test_accuracy, incorrect_predictions = compute_classifier_accuracy(model, test_loader)
 
             train_accuracies.append(train_accuracy)
             val_accuracies.append(val_accuracy)
-            test_accuracies.append(test_accuracy)
 
 
             print(f"training accuracy: {train_accuracy}")
             print(f"Val accuracy: {val_accuracy}")
-            print(f"Test accuracy: {test_accuracy}")
     return incorrect_predictions
 
 
@@ -181,29 +178,13 @@ if __name__ == "__main__":
     val_dataset = BiasTokenDataset(val_df, max_length=block_size)
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=True)
 
-    test_dataset = BiasTokenDataset(test_df, max_length=block_size)
-    test_loader = DataLoader(test_dataset, batch_size=16, shuffle=True)
 
-    encoder = EncoderModel(encoding.n_vocab, embed_size, block_size, num_heads, num_layers)
-    model = Classifier(encoder, embed_size, hidden_size, 2)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    encoder = EncoderModel(encoding.n_vocab, embed_size, block_size, num_heads, num_layers).to(device)
+    model = Classifier(encoder, embed_size, hidden_size, 2).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     criterion = torch.nn.CrossEntropyLoss()
     num_epochs = 20
-    incorrect_predictions = train_model(model, train_loader, val_loader, test_loader, optimizer, num_epochs)
-    #model.load_state_dict(torch.load("model.pth"))
+    incorrect_predictions = train_model(model, train_loader, val_loader, optimizer, num_epochs)
     test_accuracy, incorrect_predictions = compute_classifier_accuracy(model, val_loader)
     
-
-    for i, example in enumerate(incorrect_predictions[:5]):
-        bias_token_indices = example['biased_tokens']
-        bias_words = []
-        for ind in bias_token_indices:
-            token = example['input_ids'][ind]
-            bias_token = encoding.decode([token])
-            bias_words.append(bias_token)
-
-        print(f"Example {i + 1}:")
-        print(f"  Text: {encoding.decode(example['input_ids'])}")
-        print(f"Predicted Bias Tokens: ' {bias_words}")
-        print(f"  True Label: {example['true_label']}")
-        print(f"  Predicted Label: {example['predicted_label']}")
+    torch.save(model.state_dict(), './src/models/final_model.pth')
