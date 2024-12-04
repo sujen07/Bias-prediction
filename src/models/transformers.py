@@ -23,7 +23,7 @@ class BiasTokenDataset(Dataset):
         text = self.dataframe.iloc[idx]['text']
         label_str = self.dataframe.iloc[idx]['label_bias']
         bias_words = eval(self.dataframe.iloc[idx]['biased_words'])  
-        
+
         # Tokenize the text using the tiktoken tokenizer
         tokenized = self.tokenizer.tokenize(text, max_length=self.max_length, padding=True)
 
@@ -71,10 +71,10 @@ class Head(nn.Module):
         return out, wei
     
 class MultiHeadAttention(nn.Module):
-    def __init__(self, embed_size, head_size, n_heads, max_seq_len=None, use_alibi=False):
+    def __init__(self, embed_size, head_size, n_heads):
         super().__init__()
         self.heads = nn.ModuleList([
-            Head(embed_size=embed_size, head_size=head_size, max_seq_len=max_seq_len, use_alibi=use_alibi) 
+            Head(embed_size=embed_size, head_size=head_size) 
             for _ in range(n_heads)
         ])
         self.proj = nn.Linear(head_size * n_heads, embed_size)
@@ -131,7 +131,7 @@ class EncoderModel(nn.Module):
         self.position_embedding = nn.Embedding(block_size, embed_size)
         self.blocks = nn.ModuleList([Block(embed_size, n_heads) for _ in range(n_layers)])
         self.ln_f = nn.LayerNorm(embed_size)
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0)
 
     def forward(self, input_ids, bias_tokens):
         B, T = input_ids.shape
@@ -140,7 +140,7 @@ class EncoderModel(nn.Module):
         pos_emb = self.position_embedding(torch.arange(T, device=input_ids.device))  # Positional embeddings
 
         # Fuse embeddings
-        x = token_emb + bias_emb + pos_emb
+        x = self.ln_f(token_emb + bias_emb + pos_emb)
         x = self.dropout(x)
         for block in self.blocks:
             x, _ = block(x)

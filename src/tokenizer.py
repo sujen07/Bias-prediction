@@ -3,6 +3,8 @@ import torch
 
 encoding = tiktoken.get_encoding("cl100k_base")
 
+
+
 class Tokenizer():
     def __init__(self):
         self.tokenizer = encoding
@@ -17,7 +19,7 @@ class Tokenizer():
         # Handle padding
         if padding and max_length is not None:
             # Pad the sequence to max_length
-            pad_token_id = self.tokenizer.pad_token_id if hasattr(self.tokenizer, 'pad_token_id') else 0
+            pad_token_id = self.tokenizer.eot_token if hasattr(self.tokenizer, 'eot_token') else 0
             token_ids = token_ids + [pad_token_id] * (max_length - len(token_ids))
 
         # Convert to PyTorch tensor
