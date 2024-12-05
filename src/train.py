@@ -118,7 +118,7 @@ def train_baseline(train_loader, val_loader, model, optimizer, num_epochs):
             print(f"training accuracy: {train_accuracy}")
             print(f"Val accuracy: {test_accuracy}")
     end_time = time.time()
-    print(f'Total Time taken for basline: {start_time - end_time}')
+    print(f'Total Time taken for basline: {end_time - start_time}')
 
 
 
@@ -157,7 +157,7 @@ def train_model(model, train_loader, val_loader, optimizer, num_epochs):
             print(f"training accuracy: {train_accuracy}")
             print(f"Val accuracy: {val_accuracy}")
     end_time = time.time()
-    print(f'Total Time taken for training: {start_time - end_time}')
+    print(f'Total Time taken for training: {end_time - start_time}')
     return incorrect_predictions
 
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     criterion = torch.nn.CrossEntropyLoss()
     bias_criterion = torch.nn.BCELoss()
     num_epochs = 10
-    #train_baseline(train_loader, val_loader, baseline_model, optimizer, num_epochs)
+    train_baseline(train_loader, val_loader, baseline_model, optimizer, num_epochs)
 
     train_dataset = BiasTokenDataset(train_df, max_length=block_size)
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     encoder = EncoderModel(encoding.n_vocab, embed_size, block_size, num_heads, num_layers).to(device)
     model = Classifier(encoder, embed_size, hidden_size, 2).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     criterion = torch.nn.CrossEntropyLoss()
     num_epochs = 20
     incorrect_predictions = train_model(model, train_loader, val_loader, optimizer, num_epochs)
